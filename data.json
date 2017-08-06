@@ -1,0 +1,29 @@
+{
+	"iceCreams": [{
+		"name": "ice cream",
+		"options": ["waffle cone", "cup", "cake cone", "sugar cone"],
+		"scoopsMaxLeft": "2",
+		"price": "",
+		"scoopsOf": []
+	}, {
+		"name": "milkshake",
+		"options": ["skin milk", "whole milk", "2% milk"],
+		"scoopsMaxLeft": "1",
+		"price": "",
+		"scoopsOf": []
+	}, {
+		"name": "floats",
+		"options": ["coca-cola", "fanta", "sprite", "root beer", "dr. pepper"],
+		"scoopsMaxLeft": "infinite",
+		"price": "",
+		"scoopsOf": []
+	}],
+	"flavors": [
+		"Vanilla", "Strawberry", "Chocolate", "Mint chocolate", "Cotton candy", "Blueberry"
+	],
+	"priceList": {
+		"scoop": 1.5,
+		"milks": 0.5,
+		"sodas": 1
+	}
+}
