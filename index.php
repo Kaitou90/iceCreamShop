@@ -1,15 +1,17 @@
 <?php
 	require_once('order.php');
 	session_start();
+	$message = '';
 
 	if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-		if(count($_SESSION['item']) > 0) {
+		if(($_POST['type']) !== "-- select --") {
 
 			$amountIsInt = true;
 			$tooMuch = false;
 
 			$_SESSION['item']->setIceCreamType($_POST['type']);
+
 
 			// Lets make sure that amount is integer.
 			foreach ($_POST['select'] as $value) {
@@ -31,11 +33,10 @@
 				$_SESSION['item'] = new IceCream();
 
 			} else {
-				print_r("Item not updated into order. Check the amount field. <br />");
-				print_r("Maximum amount of scoops in ". $_POST['type'] ." is ". $_SESSION['item']->scoopsLeft. ". <br />");
+				$message = "Item not updated into order. Check the amount field. <br /> Maximum amount of scoops in ". $_POST['type'] ." is ". $_SESSION['item']->scoopsLeft. ". <br />" ;
 			}
 		} else {
-			print_r("Cannot submit an empty item.");
+			$message = "Cannot submit an empty item.";
 		}
 	}
 	if (!isset($_SESSION['order'])) {
@@ -48,8 +49,10 @@
 <html>
 <head>
 	<title>Ice Cream Shop</title>
+	<link rel="stylesheet" href="./css/bootstrap.min.css">
+
 	<script type="text/javascript">
-		var count = 0;
+		var count = 1;
 
 		window.onload = function() {
 			<?php $list = new IceCream(); ?>
@@ -91,6 +94,10 @@
 			// Prints Receipt informations: subtotal, discount and total.
 			total = <?php echo json_encode($_SESSION['order']->getTotal()); ?>;
 			document.getElementById("ordered").innerHTML += "<li> <b>Total:</b> <ul><li>Sub total: $" + total['subTotal'] + "</li><li>Discount: - $"+ total['discount'] +"</li><li>Total: $"+total['total']+"</li></ul></li>";
+
+			if ( document.getElementById('scoopMax').innerHTML == '' ) {
+				document.getElementById('scoopMax').hidden = true;
+			}
 		}
 
 		// Updates ice cream options based on selected ice cream type.
@@ -100,7 +107,13 @@
 
 			orderItem = items.map(function(e) {return e["name"]}).indexOf(iceCreamType);
 
-			var options = items[orderItem]['options'];
+			console.log(items[orderItem]);
+			if ( items[orderItem] != undefined ) {
+				var options = items[orderItem]['options'];
+			} else {
+				var options = 0;
+			} 
+
 			var special = document.getElementById("special");
 
 			document.getElementById("special").innerHTML = "<option >-- select --</option>";
@@ -112,8 +125,13 @@
 				special.appendChild(option);
 			}
 
-			document.getElementById('scoopMax').innerHTML = "Maximum amount of scoops in " + iceCreamType + " is "+items[orderItem]['scoopsMaxLeft'];
-
+			if ( iceCreamType == "-- select --"){
+				document.getElementById('scoopMax').hidden = true;
+				document.getElementById('scoopMax').innerHTML = "";
+			} else {
+				document.getElementById('scoopMax').hidden = false;
+				document.getElementById('scoopMax').innerHTML = "Maximum amount of scoops in " + iceCreamType + " is "+items[orderItem]['scoopsMaxLeft'];
+			}
 		}
 
 		// Updates ice cream flavor options to dropdown.
@@ -136,8 +154,13 @@
 			count++;
 
 			// Insert new flavor selection dropdown and input fields
-			var select = 'flavor: <select class="selectFlavor" id="flavorSelect['+count+']" ><option >-- select --</option></select>';
-			var input =  ' amount: <input class="selectFlavor" type = "text" name ="select['+count+'][amount]" id="amountSelect['+count+']" value="" /> <br />';
+			let select = count + '. flavor: ' +
+						'<select class="selectFlavor form-control" id="flavorSelect['+count+']" name="select[0][flavor]">' +
+							'<option >-- select --</option>'
+						'</select>';
+			let input = 'amount: ' +
+						'<input type = "text" class="selectFlavor form-control" id="amountSelect['+count+']" name ="select['+count+'][amount]" value="" />';
+
 			document.getElementById('flavorSection').innerHTML += select;
 			document.getElementById('flavorSection').innerHTML += input;
 
@@ -146,37 +169,65 @@
 	</script>
 </head>
 <body>
-
-	<div>
-		<b> Flavor options: </b> <br />
-		<ul id="flavors"></ul>
-
+<div class="container mt-5">
+	<div class="row">
+		<div class="col-12">
+			<h1>Ice Cream Shop</h1>
+		</div>
 	</div>
-	<div>
-   		<form name = "typeForm" action = "<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method = "POST">
-			ice cream: <select name="type" id="type" onchange="updateSecondDrop()">
-				<option >-- select --</option>
-			</select> <br />
-			selection: <select id="special" name="special">
-				<option >-- select --</option>
-			</select>
-
-			<div id="scoopMax"></div>
-			<div id="flavorSection">
-				flavor: <select class="selectFlavor" id="flavorSelect[0]" name="select[0][flavor]">
-					<option >-- select --</option>
-				</select> amount: <input type = "text" class="selectFlavor" id="amountSelect[0]" name ="select[0][amount]" value="" /><br />
-			</div>
-			<input type="button" onclick="addMoreFlavors()" value="Next flavor" />
-
-			<input type = "submit" />
-	      </form>
-      </div>
-
-    <div>
-		<b>Receipt:</b>
-		<ul id="ordered">
-		</ul>
+	<?php if (strlen($message) > 0 ) : ?>
+	<div class="alert alert-warning" role="alert">
+		<?php echo $message ?>
 	</div>
+	<?php endif; ?>
+	<div class="row">
+		
+		<div class="col-6">
+	   		<form name = "typeForm" action = "<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method = "POST">
+				<div class="form-group">
+					<label>Ice Cream: </label>
+					
+					<select name="type" id="type" onchange="updateSecondDrop()" class="form-control">
+						<option >-- Select --</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label>Selection: </label>
+				
+					<select id="special" name="special" class="form-control">
+						<option >-- Select --</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<div id="scoopMax" class="alert alert-info" role="alert"></div>
+					<div id="flavorSection">
+						<label>Flavor:</label> 
+						<select class="selectFlavor form-control" id="flavorSelect[1]" name="select[1][flavor]">
+							<option >-- Select --</option>
+						</select> 
+						<label>Amount:</label> 
+						<input type = "text" class="selectFlavor form-control" id="amountSelect[1]" name ="select[1][amount]" value="" />
+					</div>
+					<input type="button" onclick="addMoreFlavors()" value="Next Flavor" class="btn btn-secondary mt-2" />
+				</div>
+				<input class="btn btn-primary" type="submit" value="Add Ice Cream To Order" />
+		      </form>
+	      </div>
+	      <div class="col-6">
+			<h5> Flavor options: </h5> 
+			<ul id="flavors"></ul>
+
+		</div>
+    </div>
+    <hr />
+	<div class="row">
+
+	    <div class="col-6">
+			<h4>Receipt:</h4>
+			<ul id="ordered">
+			</ul>
+		</div>
+	</div>
+</div>
 </body>
 </html>

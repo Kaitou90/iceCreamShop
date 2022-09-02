@@ -36,7 +36,7 @@ class IceCream extends FormChecks {
 				$scoopMax = 'infinite';
 				break;
 			default:
-				return print_r("nothing selected");
+				$scoopMax = 0;
 				break;
 		}
 		$this->setScoopsLimit($scoopMax);
